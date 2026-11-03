@@ -158,6 +158,13 @@ export function renderSuspense(fiber: Fiber): void {
         const checkpoint = checkpointCommit(fiber);
         const wasHydrating = root!.h;
         root!.h = true;
+        // A child can suspend outside hydration here, when a mismatch makes the
+        // boundary client-render. Rethrow its thenable so the retry below waits
+        // on it instead of capturing the boundary and rescheduling it forever.
+        const prevHandler = suspendHandler;
+        suspendHandler = (thenable) => {
+            throw thenable;
+        };
         try {
             hydrateSuspenseBoundary(fiber, props, [state.b.data === '$!' ? 2 : 0, 0, state.b, state.e]);
         }
@@ -169,6 +176,7 @@ export function renderSuspense(fiber: Fiber): void {
             retryHydration(fiber, error);
         }
         finally {
+            suspendHandler = prevHandler;
             root!.h = wasHydrating;
         }
         return;
