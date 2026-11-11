@@ -1062,7 +1062,9 @@ export function renderNode(fiber: Fiber): void {
         fiber.type = resolveRefreshType(fiber.type);
     }
     // Memo consumes pending state when it delegates to its inner renderer.
-    if (fiber.t !== FiberTag.Memo)
+    // Lazy delegates to its resolved type on this same fiber, so it keeps the
+    // flag too: a lazy memo would otherwise bail out and drop its own update.
+    if (fiber.t !== FiberTag.Memo && fiber.t !== FiberTag.Lazy)
         fiber.g = false;
     fiber.r ||= currentRoot || findRoot(fiber);
     if (fiber.r?.sp && fiber.p?.ld && fiber.m === null)

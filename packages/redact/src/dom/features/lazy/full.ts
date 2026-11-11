@@ -12,6 +12,8 @@ function renderLazy(fiber: Fiber): void {
     }
     catch (thenable: any) {
         if (isThenable(thenable)) {
+            // No resolved type consumes the pending flag while suspended.
+            fiber.g = false;
             if (deferHydration(fiber, thenable))
                 return;
             handleSuspended(fiber, thenable);
